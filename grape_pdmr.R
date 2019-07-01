@@ -14,7 +14,7 @@ data=read_csv("data/all_shasta_data.csv") %>%
          cluster_severity = `cluster sev`) %>%
   mutate(date=lubridate::mdy(date),
          cluster_incidence=as.numeric(cluster_incidence),
-         cluster_severity=as.numeric(cluster_severity),
+         cluster_severity=as.numeric(cluster_severity)*100,
          year=lubridate::year(date),
          yday=lubridate::yday(date)) %>%
   full_join(., cultivar) %>%
@@ -43,7 +43,9 @@ audpc_summary=data %>%
             mean_cluster_inc=mean(cluster_incidence, na.rm = T),
             mean_cluster_sev=mean(cluster_severity, na.rm = T)) %>%
   group_by(cultivar_name, year, rep) %>%
-    summarize(audpc_leaf=audpc(evaluation = mean_leaf_sev, dates = yday ))
+  drop_na() %>%
+    summarize(audpc_leaf=audpc(evaluation = mean_leaf_sev, dates = yday ),
+              audpc_cluster=audpc(evaluation = mean_cluster_sev, dates = yday ))
 
 #2012
 data_summary_2012=data %>%
@@ -216,3 +218,39 @@ ggplot(audpc_summary, aes(reorder(cultivar_name, audpc_leaf, FUN = mean),
   ylab("Area Under Disease Progress Curve (AUDPC") +
   xlab("Cultivar Name")
 ggsave(filename = "figures/audpc_leaf.png", width = 10, height = 6, units = "in")  
+
+
+ggplot(data_summary_rep, aes(mean_leaf_sev, 
+                             mean_cluster_sev, 
+                             color = yday))+
+  geom_point(size = 2) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis_c(option = "D", 
+                        guide = guide_legend(title.position = "top")) +
+  theme_dark() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 15),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 12)) +
+  ylab("Mean Cluster Severity (%)") +
+  xlab("Mean Leaf Severity (%)")
+ggsave(filename = "figures/leaf_cluster_concordance.png", width = 6, height = 6, units = "in")  
+
+###
+ggplot(audpc_summary, aes(audpc_leaf, 
+                          audpc_cluster, 
+                             color = cultivar_name))+
+  geom_point(size = 2) +
+  #geom_abline(slope = 1, intercept = 0) +
+  scale_color_viridis_d(option = "D", 
+                        guide = guide_legend(ncol = 3, title.position = "top")) +
+  theme_dark() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 15),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 12)) +
+  ylab("Cluster AUDPC") +
+  xlab("Leaf AUDPC")
+ggsave(filename = "figures/leaf_cluster_audpc_concordance.png", width = 6, height = 6, units = "in")  
