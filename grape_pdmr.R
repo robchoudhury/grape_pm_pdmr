@@ -151,4 +151,68 @@ summary(test)
 cld(grape_glht)
 cld(grape_glht_cluster)
 
+data = data %>%
+  mutate(yday = yday(date))
 
+ggplot(data, aes(yday, 
+                 leaf_severity, 
+                 group = cultivar_name, 
+                 color = cultivar_name)) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", na.rm = T, size =2)+
+  stat_summary(fun.y = mean, geom = "line", na.rm = T, size =2)+
+  facet_grid(year~., scales = "free") +
+  scale_color_viridis_d(option = "C", 
+                        guide = guide_legend(ncol = 3,title.position = "top")) +
+  theme_dark() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 15),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 12)) +
+  ylab("Leaf Disease Severity (%)") +
+  xlab("Julian Date")
+ggsave(filename = "figures/leaf_severity.png", width = 8, height = 6, units = "in")  
+
+ggplot(data, aes(yday, 
+                 cluster_severity, 
+                 group = cultivar_name, 
+                 color = cultivar_name)) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", na.rm = T, size =2)+
+  stat_summary(fun.y = mean, geom = "line", na.rm = T, size =2)+
+  facet_grid(year~., scales = "free") +
+  scale_color_viridis_d(option = "C", 
+                        guide = guide_legend(ncol = 3,title.position = "top")) +
+  theme_dark() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 15),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 12)) +
+  ylab("Leaf Disease Severity (%)") +
+  xlab("Julian Date")
+ggsave(filename = "figures/cluster_severity.png", width = 8, height = 6, units = "in")  
+
+#####
+addline_format <- function(x,...){
+  gsub('\\s','\n',x)
+}
+#####
+ggplot(audpc_summary, aes(reorder(cultivar_name, audpc_leaf, FUN = mean), 
+                 audpc_leaf, 
+                 group = cultivar_name, 
+                 color = cultivar_name)) +
+  geom_jitter(size = 2)+
+  stat_summary(fun.data = mean_se, geom = "errorbar", na.rm = T, size =2)+
+  facet_grid(year~., scales = "free") +
+  scale_x_discrete(labels=function(x){sub("\\s", "\n", x)})+
+  scale_color_viridis_d(option = "C", 
+                        guide = guide_legend(ncol = 3,title.position = "top")) +
+  theme_dark() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 15),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 12)) +
+  ylab("Area Under Disease Progress Curve (AUDPC") +
+  xlab("Cultivar Name")
+ggsave(filename = "figures/audpc_leaf.png", width = 10, height = 6, units = "in")  
